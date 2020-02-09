@@ -52,6 +52,10 @@ public abstract class AbstractSqlWrapper<T,Children extends AbstractSqlWrapper<T
 
     private Children addCondition(SFunction<T,?> column, SqlKeyword sqlKeyword, Object value, boolean ignoreNull){
         if(ignoreNull && StringUtils.ignoreNull(value)) return typedThis;
+        if(column == null){
+            typedThis.lambdaSqlModelList.add(new LambdaSqlModel(null,null,sqlKeyword));
+            return typedThis;
+        }
         String columnName = StringUtils.resolveFieldName(columnToString(column));
         String valueTemp = columnName+Math.abs(value.hashCode())+UUID.randomUUID().toString().replace("-","");
         if(StringUtils.isNotEmpty(value.toString())){
@@ -253,6 +257,11 @@ public abstract class AbstractSqlWrapper<T,Children extends AbstractSqlWrapper<T
         return this.addCondition(null,SqlKeyword.AND,null,false);
     }
 
+    /**
+     * lg:wrapper->wrapper.eq...
+     * @param function
+     * @return
+     */
     @Override
     public Children and(Function<Children, Children> function) {
         and();
@@ -267,6 +276,11 @@ public abstract class AbstractSqlWrapper<T,Children extends AbstractSqlWrapper<T
         return this.addCondition(null,SqlKeyword.OR,null,false);
     }
 
+    /**
+     * lg:wrapper->wrapper.eq...
+     * @param function
+     * @return
+     */
     @Override
     public Children or(Function<Children, Children> function) {
         or();

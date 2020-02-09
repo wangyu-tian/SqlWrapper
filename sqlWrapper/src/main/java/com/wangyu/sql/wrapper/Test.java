@@ -19,7 +19,7 @@ public class Test {
         sqlWrapper.eq(EntityModel::getId,12)
                 .le(EntityModel::getName,"zhangsan")
                 .and(wrapper->wrapper.ge(EntityModel::getName,"169219").eq(EntityModel::getId,12))
-                .or(wrapper->wrapper.le(EntityModel::getName,"name").eq(EntityModel::getId,88))
+                .or(wrapper->wrapper.le(EntityModel::getName,"name").or().eq(EntityModel::getId,88))
                 .orderBy(sqlWrapper.newOrderByModel(EntityModel::getId),
                         sqlWrapper.newOrderByModel(EntityModel::getName,SqlWrapperConfig.Order.DESC));
         ;
