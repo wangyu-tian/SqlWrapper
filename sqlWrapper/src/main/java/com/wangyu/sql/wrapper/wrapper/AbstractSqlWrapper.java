@@ -81,7 +81,7 @@ public abstract class AbstractSqlWrapper<T,Children extends AbstractSqlWrapper<T
     }
 
     private StringBuffer initHql(){
-        selectSql.append("from").append(EMPTY).append(entityClass.getName()).append(EMPTY);
+        selectSql.append("from").append(EMPTY).append(entityClass.getName()).append(EMPTY).append("o").append(EMPTY);
         return selectSql;
     }
 
