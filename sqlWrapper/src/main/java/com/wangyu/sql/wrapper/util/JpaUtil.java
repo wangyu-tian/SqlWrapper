@@ -117,4 +117,9 @@ public class JpaUtil{
   public List<CalendarEntity> wrapper(SqlWrapper<CalendarEntity> sqlWrapper) {
     return list(sqlWrapper.getHql(),sqlWrapper.getParamsMap());
   }
+
+  public <T> Page<T> pageWrapper(SqlWrapper<T> sqlWrapper,Pageable pageable){
+    return page(sqlWrapper.getHql(),sqlWrapper.getParamsMap(),pageable
+            ,null);
+  }
 }
