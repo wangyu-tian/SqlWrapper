@@ -9,6 +9,7 @@ import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -19,7 +20,6 @@ import java.util.Map;
 
 /**
  * @Author wangyu
- * @Description: Copyright  2018 yiYuan Networks 上海义援网络科技有限公司. All rights reserved.
  * @Date 2019/3/15
  */
 @Transactional(readOnly=true)
@@ -114,7 +114,15 @@ public class JpaUtil{
     return total;
   }
 
-  public List<CalendarEntity> wrapper(SqlWrapper<CalendarEntity> sqlWrapper) {
+  public <T> T wrapperOne(SqlWrapper<T> sqlWrapper) {
+    List<T> dataList = list(sqlWrapper.getHql(),sqlWrapper.getParamsMap());
+    if(CollectionUtils.isEmpty(dataList)){
+      return null;
+    }
+    return dataList.get(0);
+  }
+
+  public <T> List<T> wrapper(SqlWrapper<T> sqlWrapper) {
     return list(sqlWrapper.getHql(),sqlWrapper.getParamsMap());
   }
 
