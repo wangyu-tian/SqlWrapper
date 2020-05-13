@@ -1,6 +1,7 @@
 package com.wangyu.sql.wrapper;
 
 import com.alibaba.fastjson.JSON;
+import com.wangyu.sql.wrapper.model.GroupByModel;
 import com.wangyu.sql.wrapper.util.JpaUtil;
 import com.wangyu.sql.wrapper.wrapper.SqlWrapper;
 import org.junit.Test;
@@ -11,7 +12,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -24,7 +28,8 @@ public class SqlWrapperApplicationTests {
     public void contextLoads() {
 
         SqlWrapper<CalendarEntity> sqlWrapper = new SqlWrapper(CalendarEntity.class);
-        sqlWrapper.ne(CalendarEntity::getId,14252,true);
+        sqlWrapper.ne(CalendarEntity::getId,14252,true)
+                    .in(CalendarEntity::getId, Stream.of(14253,14254).collect(Collectors.toList()));
 //                .eq(EntityModel::getName,"zhangsan")
 //                .and(wrapper->wrapper.ge(EntityModel::getName,"169219").eq(EntityModel::getId,12))
 //                .or(wrapper->wrapper.le(EntityModel::getName,"name").or().eq(EntityModel::getId,88))

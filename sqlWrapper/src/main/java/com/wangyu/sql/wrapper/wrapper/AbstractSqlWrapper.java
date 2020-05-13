@@ -50,6 +50,14 @@ public abstract class AbstractSqlWrapper<T,Children extends AbstractSqlWrapper<T
         this.entityClass = entityClass;
     }
 
+    /**
+     * 添加sql数据模型
+     * @param column 列名
+     * @param sqlKeyword key类型
+     * @param value 值
+     * @param ignoreNull 为true并且value为空时，忽略条件判断
+     * @return
+     */
     private Children addCondition(SFunction<T,?> column, SqlKeyword sqlKeyword, Object value, boolean ignoreNull){
         if(ignoreNull && StringUtils.ignoreNull(value)) return typedThis;
         if(column == null){
@@ -57,6 +65,7 @@ public abstract class AbstractSqlWrapper<T,Children extends AbstractSqlWrapper<T
             return typedThis;
         }
         String columnName = StringUtils.resolveFieldName(columnToString(column));
+        //定义唯一参数键
         String valueTemp = columnName+Math.abs(value.hashCode())+UUID.randomUUID().toString().replace("-","");
         if(StringUtils.isNotEmpty(value.toString())){
             paramsMap.put(valueTemp,value);
@@ -65,12 +74,24 @@ public abstract class AbstractSqlWrapper<T,Children extends AbstractSqlWrapper<T
         return typedThis;
     }
 
+    /**
+     * 用于分组或者排序sql模型处理
+     * @param column
+     * @param sqlKeyword
+     * @param value
+     * @return
+     */
     private Children addConditionExt(SFunction<T,?> column, SqlKeyword sqlKeyword, Object value){
         String columnName = StringUtils.resolveFieldName(columnToString(column));
         typedThis.lambdaSqlModelList.add(new LambdaSqlModel(columnName,value,sqlKeyword));
         return typedThis;
     }
 
+    /**
+     * 获取columnName转换成string
+     * @param column
+     * @return
+     */
     private String columnToString(SFunction<T,?> column) {
         if(column == null) return null;
         return this.getColumn(LambdaUtils.resolve(column));
@@ -80,20 +101,34 @@ public abstract class AbstractSqlWrapper<T,Children extends AbstractSqlWrapper<T
         return lambda.getImplMethodName();
     }
 
+    /**
+     * 初始化查询hql
+     * @return
+     */
     private StringBuffer initHql(){
-        selectSql.append("from").append(EMPTY).append(entityClass.getName()).append(EMPTY).append("o").append(EMPTY);
+        selectSql.append("from").append(EMPTY)
+                .append(entityClass.getName())
+                .append(EMPTY).append("o").append(EMPTY);
         return selectSql;
     }
 
+    /**
+     * 获取参数
+     * @return
+     */
     public Map<String, Object> getParamsMap() {
         return paramsMap;
     }
 
+    /**
+     * 获取hql
+     * @return
+     */
     @Override
     public String getHql() {
         selectSql.setLength(0);
         initHql();
-        if(lambdaSqlModelList.size()>0){
+        if(lambdaSqlModelList.size() > 0){
             selectSql.append("where ");
             for(int i = 0 ; i < lambdaSqlModelList.size() ; i++){
                 if(i==0){
@@ -106,6 +141,12 @@ public abstract class AbstractSqlWrapper<T,Children extends AbstractSqlWrapper<T
         return selectSql.toString();
     }
 
+    /**
+     * 列数据转换
+     * @param b 是否默认添加AND分隔符
+     * @param lambdaSqlModel sqlmodel转换
+     * @return
+     */
     protected  String columnToValues(boolean b, LambdaSqlModel lambdaSqlModel){
         StringBuffer whereSql = new StringBuffer(EMPTY);
         String wherePre = b?"":isAndOrLevel(lambdaSqlModel.getSqlKeyword())?"AND ":"";
@@ -121,15 +162,18 @@ public abstract class AbstractSqlWrapper<T,Children extends AbstractSqlWrapper<T
                 whereSql.append(orderTemp).append(lambdaSqlModel.getColumnName()).append(EMPTY).append(lambdaSqlModel.getValue());break;
             case IN:
             case NOT_IN:
-                //whereSqlByValue(whereSql.append(wherePre),lambdaSqlModel.getColumnName(),lambdaSqlModel.getSqlKeyword(),columnValueListForInOrNotIn(lambdaSqlModel));break;
             default:whereSqlByValue(whereSql.append(wherePre),lambdaSqlModel.getColumnName(),lambdaSqlModel.getSqlKeyword(),
-                    //StringUtils.quotaMark(lambdaSqlModel.getValue()));
                     String.valueOf(lambdaSqlModel.getValue()));
                     removePre = false;
         }
         return whereSql.toString();
     }
 
+    /**
+     * 内部参数转换，默认AND添加剂
+     * @param sqlKeyword
+     * @return
+     */
     private boolean isAndOrLevel(SqlKeyword sqlKeyword) {
         boolean startBeforeSqlWordTemp = false;
         switch (sqlKeyword){
@@ -164,6 +208,13 @@ public abstract class AbstractSqlWrapper<T,Children extends AbstractSqlWrapper<T
         return "("+value+")";
     }
 
+    /**
+     * group by 分组
+     * you can use by flows
+     * sqlWrapper.newGroupByModel(Entity::getId)
+     * @param groupByModels
+     * @return
+     */
     @Override
     public Children groupBy(GroupByModel... groupByModels) {
         Arrays.asList(groupByModels).forEach(o ->{
@@ -172,6 +223,13 @@ public abstract class AbstractSqlWrapper<T,Children extends AbstractSqlWrapper<T
         return typedThis;
     }
 
+    /**
+     * order by 分组
+     * you can use by flows
+     * sqlWrapper.newOrderByModel(Entity::getId)
+     * @param orderByModels
+     * @return
+     */
     @Override
     public Children orderBy(OrderByModel... orderByModels) {
         Arrays.asList(orderByModels).forEach(o ->{
@@ -181,7 +239,7 @@ public abstract class AbstractSqlWrapper<T,Children extends AbstractSqlWrapper<T
     }
 
     @Override
-    public Children notIn(SFunction<T, ?> column, Object value, boolean b) {
+    public Children notIn(SFunction<T, ?> column, List value, boolean b) {
         return this.addCondition(column,SqlKeyword.NOT_IN,value,b);
     }
 
@@ -248,7 +306,7 @@ public abstract class AbstractSqlWrapper<T,Children extends AbstractSqlWrapper<T
     }
 
     @Override
-    public Children in(SFunction<T, ?> column, Object value, boolean b) {
+    public Children in(SFunction<T, ?> column, List value, boolean b) {
         return this.addCondition(column,SqlKeyword.IN,value,b);
     }
 
