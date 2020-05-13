@@ -1,8 +1,8 @@
 package com.wangyu.sql.wrapper.util;
 
-import com.wangyu.sql.wrapper.CalendarEntity;
 import com.wangyu.sql.wrapper.wrapper.SqlWrapper;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.query.QueryUtils;
 import org.springframework.data.repository.support.PageableExecutionUtils;
@@ -19,115 +19,172 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @Author wangyu
- * @Date 2019/3/15
- */
-@Transactional(readOnly=true)
+ *  * @Author wangyu
+ *  * @Date 2019/3/15
+ *  
+ */
+@Transactional(readOnly = true)
 @Repository
-public class JpaUtil{
-  @PersistenceContext
-  private EntityManager em;
-  /**
-   * 获取列表
-   * @param sql
-   * @param params
-   * @param requiredType
-   * @return
-   */
-  public <T> List<T> list(String sql, Map<String, Object> params, Class<T> requiredType) {
-    //String hql = "select o.uuid,o.name from UserModel o where 1=1 and o.uuid=:uuid";
-    Query query = em.createQuery(sql);
-    if (params != null) {
-      for (String key : params.keySet()) {
-        query.setParameter(key, params.get(key));
-      }
+public class JpaUtil {
+    @PersistenceContext
+    private EntityManager em;
+
+
+    /**
+     * 查询获取列表
+     *
+     * @param hql
+     * @param params
+     * @param <T>
+     * @return
+     */
+    public <T> List<T> list(String hql, Map<String, Object> params) {
+        Query query = queryParams(hql, params);
+        return query.getResultList();
     }
+
+  /**
+   * 查询单数据
+   *
+   * @param hql
+   * @param params
+   * @param <T>
+   * @return
+   */
+  public <T> List<T> one(String hql, Map<String, Object> params) {
+    Query query = queryParams(hql, params);
+    query.setMaxResults(1);
     return query.getResultList();
   }
 
-  public <T> List<T> list(String sql, Map<String, Object> params) {
-    return list(sql,params,null);
-  }
-  /**
-   * 获取分页数据
-   * @param sql
-   * @param params
-   * @param pageable
-   * @param requiredType
-   * @return
-   */
-  @SuppressWarnings("unchecked")
-  public <T> Page<T> page(String sql, Map<String, Object> params, Pageable pageable, Class<T> requiredType) {
-    Query query = em.createQuery(sql);
-    if (params != null) {
-      for (String key : params.keySet()) {
-        query.setParameter(key, params.get(key));
-      }
-    }
-    if (pageable.isPaged()) {
-      query.setFirstResult((int) pageable.getOffset());
-      query.setMaxResults(pageable.getPageSize());
-    }
     /**
-     * 生成获取总数的sql
-     */
-    TypedQuery<Long> cQuery = (TypedQuery<Long>) em.createQuery(QueryUtils.createCountQueryFor(sql));
-    if (params != null) {
-      for (String key : params.keySet()) {
-        cQuery.setParameter(key, params.get(key));
-      }
+     * 获取query
+     *
+     * @param hql
+     * @param params
+     * @return
+     */
+    private Query queryParams(String hql, Map<String, Object> params) {
+        Query query = em.createQuery(hql);
+        if (params != null) {
+            for (String key : params.keySet()) {
+                query.setParameter(key, params.get(key));
+            }
+        }
+        return query;
     }
-    return PageableExecutionUtils.getPage(query.getResultList(), pageable, ()->executeCountQuery(cQuery));
-    //return new PageImpl<T>(query.getResultList(), pageable, executeCountQuery(cQuery));
-  }
 
-  /**
-   * 计算数量
-   * @param sql
-   * @param params
-   * @return
-   */
-  public int count(String sql, Map<String, Object> params) {
-    TypedQuery<Long> cQuery = (TypedQuery<Long>) em.createQuery(QueryUtils.createCountQueryFor(sql));
-    if (params != null) {
-      for (String key : params.keySet()) {
-        cQuery.setParameter(key, params.get(key));
-      }
+    /**
+     * 设置参数
+     *
+     * @param query
+     * @param params
+     * @return
+     */
+    private Query setQueryParams(Query query, Map<String, Object> params) {
+        if (params != null) {
+            for (String key : params.keySet()) {
+                query.setParameter(key, params.get(key));
+            }
+        }
+        return query;
     }
-    long countL = executeCountQuery(cQuery);
-    return Integer.parseInt(countL+"");
-  }
 
-  /**
-   * Executes a count query and transparently sums up all values returned.
-   *
-   * @param query must not be {@literal null}.
-   * @return
-   */
-  private static Long executeCountQuery(TypedQuery<Long> query) {
-    Assert.notNull(query, "TypedQuery must not be null!");
-    List<Long> totals = query.getResultList();
-    Long total = 0L;
-    for (Long element : totals) {
-      total += element == null ? 0 : element;
+
+    /**
+     *  * 获取分页数据
+     *  * @param sql
+     *  * @param params
+     *  * @param pageable
+     *  * @param requiredType
+     *  * @return
+     *  
+     */
+    @SuppressWarnings("unchecked")
+    public <T> Page<T> page(String hql, Map<String, Object> params, Pageable pageable) {
+        Query query = queryParams(hql, params);
+        if (pageable.isPaged()) {
+            query.setFirstResult((int) pageable.getOffset());
+            query.setMaxResults(pageable.getPageSize());
+        }
+        /**
+          * 生成获取总数的hql
+          */
+        TypedQuery<Long> cQuery = (TypedQuery<Long>) em.createQuery(QueryUtils.createCountQueryFor(hql));
+        setQueryParams(cQuery, params);
+        return PageableExecutionUtils.getPage(query.getResultList(), pageable, () -> executeCountQuery(cQuery));
     }
-    return total;
-  }
 
-  public <T> T wrapperOne(SqlWrapper<T> sqlWrapper) {
-    List<T> dataList = list(sqlWrapper.getHql(),sqlWrapper.getParamsMap());
-    if(CollectionUtils.isEmpty(dataList)){
-      return null;
+    /**
+     *  * 计算数量
+     *  * @param sql
+     *  * @param params
+     *  * @return
+     *  
+     */
+    public int count(String hql, Map<String, Object> params) {
+        TypedQuery<Long> cQuery = (TypedQuery<Long>) em.createQuery(QueryUtils.createCountQueryFor(hql));
+        setQueryParams(cQuery,params);
+        long countL = executeCountQuery(cQuery);
+        return Integer.parseInt(String.valueOf(countL));
     }
-    return dataList.get(0);
-  }
 
-  public <T> List<T> wrapper(SqlWrapper<T> sqlWrapper) {
-    return list(sqlWrapper.getHql(),sqlWrapper.getParamsMap());
-  }
+    /**
+     *  * Executes a count query and transparently sums up all values returned.
+     *  *
+     *  * @param query must not be {@literal null}.
+     *  * @return
+     *  
+     */
+    private Long executeCountQuery(TypedQuery<Long> query) {
+        Assert.notNull(query, "TypedQuery must not be null!");
+        return query.getSingleResult();
+    }
 
-  public <T> Page<T> pageWrapper(SqlWrapper<T> sqlWrapper,Pageable pageable){
-    return page(sqlWrapper.getHql(),sqlWrapper.getParamsMap(),pageable
-            ,null);
-  }
+    /**
+     * 查询单数据
+     * @param sqlWrapper
+     * @param <T>
+     * @return
+     */
+    public <T> T wrapperOne(SqlWrapper<T> sqlWrapper) {
+        List<T> dataList = one(sqlWrapper.getHql(), sqlWrapper.getParamsMap());
+        if (CollectionUtils.isEmpty(dataList)) {
+            return null;
+        }
+        return dataList.get(0);
+    }
+
+    /**
+     * 列表查询
+     * @param sqlWrapper
+     * @param <T>
+     * @return
+     */
+    public <T> List<T> wrapper(SqlWrapper<T> sqlWrapper) {
+        return list(sqlWrapper.getHql(), sqlWrapper.getParamsMap());
+    }
+
+    /**
+     * 分页查询
+     * @param sqlWrapper
+     * @param pageable
+     * @param <T>
+     * @return
+     */
+    public <T> Page<T> pageWrapper(SqlWrapper<T> sqlWrapper, Pageable pageable) {
+        return page(sqlWrapper.getHql(), sqlWrapper.getParamsMap(), pageable);
+    }
+
+    /**
+     * 分页查询
+     * @param sqlWrapper
+     * @param currentPage 当前页。第一页是0
+     * @param pageSize 每页大小
+     * @param <T>
+     * @return
+     */
+    public <T> Page<T> pageWrapper(SqlWrapper<T> sqlWrapper, int currentPage,int pageSize) {
+        return page(sqlWrapper.getHql(), sqlWrapper.getParamsMap(), PageRequest.of(currentPage,pageSize));
+    }
 }
