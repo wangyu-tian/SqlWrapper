@@ -3,6 +3,7 @@ package com.wangyu.sql.wrapper.wrapper;
 import com.wangyu.sql.wrapper.model.GroupByModel;
 import com.wangyu.sql.wrapper.model.OrderByModel;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
@@ -24,7 +25,7 @@ public interface SqlCompare<Children, R> {
     Children or();
     Children or(Function<Children, Children> function);
 
-    default Children in(R column, List value){
+    default Children in(R column, Collection value){
         return in(column,value,false);
     }
 
@@ -80,7 +81,7 @@ public interface SqlCompare<Children, R> {
 
     Children isNotNull(R column);
 
-    Children in(R column, List value, boolean b);
+    Children in(R column, Collection value, boolean b);
 
     default String getHql(){return "";}
 

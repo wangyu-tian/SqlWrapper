@@ -1,5 +1,7 @@
 package com.wangyu.sql.wrapper.util;
 
+import org.springframework.util.ObjectUtils;
+
 import java.nio.charset.StandardCharsets;
 import java.sql.Blob;
 import java.util.ArrayList;
@@ -718,7 +720,7 @@ public class StringUtils {
     }
 
     public static boolean ignoreNull(Object value){
-        return value == null ? true :
+        return ObjectUtils.isEmpty(value) ? true :
             value instanceof String ? value.toString().trim().equals(""):false;
     }
 
