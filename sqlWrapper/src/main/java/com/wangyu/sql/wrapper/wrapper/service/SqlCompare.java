@@ -1,4 +1,4 @@
-package com.wangyu.sql.wrapper.wrapper;
+package com.wangyu.sql.wrapper.wrapper.service;
 
 import com.wangyu.sql.wrapper.model.GroupByModel;
 import com.wangyu.sql.wrapper.model.OrderByModel;
@@ -82,6 +82,12 @@ public interface SqlCompare<Children, R> {
     Children isNotNull(R column);
 
     Children in(R column, Collection value, boolean b);
+
+    Children between(R column, Object startValue, Object endValue, boolean b);
+
+    default Children between(R column, Object startValue, Object endValue){
+        return between(column,startValue, endValue,false);
+    }
 
     default String getHql(){return "";}
 

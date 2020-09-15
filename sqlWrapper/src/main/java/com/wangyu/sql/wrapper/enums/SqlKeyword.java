@@ -17,7 +17,7 @@ public enum SqlKeyword {
     NOT_IN("NOT IN","1"),
     NOT_EXISTS("NOT EXISTS","1"),
     EXISTS("EXISTS","1"),
-    BETWEEN("BETWEEN","1"),
+    BETWEEN("BETWEEN {} AND {}","1"),
 
     //判断关联字
     IS_NULL("IS NULL","2"),

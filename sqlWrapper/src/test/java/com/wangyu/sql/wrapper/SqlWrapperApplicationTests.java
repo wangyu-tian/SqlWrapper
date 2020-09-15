@@ -1,7 +1,9 @@
 package com.wangyu.sql.wrapper;
 
 import com.alibaba.fastjson.JSON;
+import com.wangyu.sql.wrapper.util.DateUtil;
 import com.wangyu.sql.wrapper.util.JpaUtil;
+import com.wangyu.sql.wrapper.util.MessageFormatter;
 import com.wangyu.sql.wrapper.wrapper.SqlWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -82,9 +84,18 @@ public class SqlWrapperApplicationTests {
         //判断关联字
         //AND，OR
         sqlWrapper.and(wrapper->wrapper.eq(CalendarEntity::getId,1).or().eq(CalendarEntity::getId,2))
-                .or().le(CalendarEntity::getId,3);
+                .or().le(CalendarEntity::getId,3)
+                .between(CalendarEntity::getCreateTime, DateUtil.now(),DateUtil.now())
+                .groupBy(sqlWrapper.newGroupByModel(CalendarEntity::getId))
+                .orderBy(sqlWrapper.newOrderByModel(CalendarEntity::getId));
         log.info("hql2:{}",sqlWrapper.getHql());
         log.info("sqlWrapper2:{}",JSON.toJSONString(sqlWrapper.getParamsMap()));
+
+        sqlWrapper.clear();
+
+        //TODO EXISTS 多表子查询
+        //TODO GROUP BY 自定义出参
+
     }
 
 }

@@ -51,10 +51,10 @@ public class JpaUtil {
    * @param <T>
    * @return
    */
-  public <T> List<T> one(String hql, Map<String, Object> params) {
+  public <T> T one(String hql, Map<String, Object> params) {
     Query query = queryParams(hql, params);
     query.setMaxResults(1);
-    return query.getResultList();
+    return (T) query.getSingleResult();
   }
 
     /**
@@ -95,7 +95,7 @@ public class JpaUtil {
      *  * 获取分页数据
      *  * @param sql
      *  * @param params
-     *  * @param pageable
+     *  * @param pageable: PageRequest.of(currentPage, pageSize);
      *  * @param requiredType
      *  * @return
      *  
@@ -148,11 +148,7 @@ public class JpaUtil {
      * @return
      */
     public <T> T wrapperOne(SqlWrapper<T> sqlWrapper) {
-        List<T> dataList = one(sqlWrapper.getHql(), sqlWrapper.getParamsMap());
-        if (CollectionUtils.isEmpty(dataList)) {
-            return null;
-        }
-        return dataList.get(0);
+        return one(sqlWrapper.getHql(), sqlWrapper.getParamsMap());
     }
 
     /**

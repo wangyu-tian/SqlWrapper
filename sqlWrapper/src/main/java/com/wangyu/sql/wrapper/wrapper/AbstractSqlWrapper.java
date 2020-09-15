@@ -3,14 +3,17 @@ package com.wangyu.sql.wrapper.wrapper;
 import com.wangyu.sql.wrapper.constants.SqlWrapperConfig;
 import com.wangyu.sql.wrapper.enums.SqlKeyword;
 import com.wangyu.sql.wrapper.model.GroupByModel;
-import com.wangyu.sql.wrapper.model.LambdaSqlModel;
+import com.wangyu.sql.wrapper.model.inner.LambdaSqlModel;
 import com.wangyu.sql.wrapper.model.OrderByModel;
 import com.wangyu.sql.wrapper.support.SerializedLambda;
 import com.wangyu.sql.wrapper.support.WrapperConstant;
 import com.wangyu.sql.wrapper.util.LambdaUtils;
 import com.wangyu.sql.wrapper.support.SFunction;
+import com.wangyu.sql.wrapper.util.MessageFormatter;
 import com.wangyu.sql.wrapper.util.StringUtils;
 import com.wangyu.sql.wrapper.util.WrapperUtil;
+import com.wangyu.sql.wrapper.wrapper.service.SqlCompare;
+import com.wangyu.sql.wrapper.wrapper.service.SqlModel;
 import org.springframework.util.ObjectUtils;
 
 import java.util.*;
@@ -25,6 +28,8 @@ import java.util.stream.Collectors;
  */
 public abstract class AbstractSqlWrapper<T, Children extends AbstractSqlWrapper<T, Children>>
         implements SqlCompare<Children, SFunction<T, ?>>, SqlModel<SFunction<T, ?>> {
+
+    protected String hql;
 
     private int andSqlLevel = 0;
 
@@ -164,7 +169,8 @@ public abstract class AbstractSqlWrapper<T, Children extends AbstractSqlWrapper<
                         lambdaSqlModelList.get(i)));
             }
         }
-        return selectSql.toString();
+        hql = selectSql.toString();
+        return hql;
     }
 
     /**
@@ -210,6 +216,11 @@ public abstract class AbstractSqlWrapper<T, Children extends AbstractSqlWrapper<
             case IS_NULL:
             case IS_NOT_NULL:
                 whereSqlByValue(whereSql.append(preLinkDefault), lambdaSqlModel.getColumnName(), lambdaSqlModel.getSqlKeyword(), EMPTY0);
+                isNotCheckLink = false;
+                break;
+            case BETWEEN:
+                whereSqlByValueBetween(whereSql.append(preLinkDefault), lambdaSqlModel.getColumnName(), lambdaSqlModel.getSqlKeyword(),
+                        lambdaSqlModel.getValue(),lambdaSqlModel.getValue2());
                 isNotCheckLink = false;
                 break;
             default:
@@ -268,6 +279,11 @@ public abstract class AbstractSqlWrapper<T, Children extends AbstractSqlWrapper<
 
     private void whereSqlByValue(StringBuffer whereSql, String columnName, SqlKeyword sqlKeyword, String value) {
         whereSql.append(columnName).append(EMPTY).append(sqlKeyword.getKeyword()).append(EMPTY).append(value).append(EMPTY);
+    }
+
+    private void whereSqlByValueBetween(StringBuffer whereSql, String columnName, SqlKeyword sqlKeyword, Object valueStart,Object valueEnd) {
+        whereSql.append(columnName).append(EMPTY)
+                .append(MessageFormatter.format(sqlKeyword.getKeyword(),valueStart,valueEnd).getMessage()).append(EMPTY);
     }
 
     /**
@@ -429,4 +445,22 @@ public abstract class AbstractSqlWrapper<T, Children extends AbstractSqlWrapper<
         this.addCondition(null, SqlKeyword.OR_RIGHT, null, false);
         return typedThis;
     }
+
+    @Override
+    public Children between(SFunction<T, ?> column, Object startValue, Object endValue, boolean ignoreNull) {
+        // 参数可为空则不进行任何处理
+        if (ignoreNull && (StringUtils.ignoreNull(startValue) || StringUtils.ignoreNull(endValue))) return typedThis;
+        // 解析获取列字段名
+        String columnName = StringUtils.resolveFieldName(columnToString(column));
+        // 定义唯一参数键
+        String startValueTemp = columnName + Math.abs(startValue.hashCode()) + UUID.randomUUID().toString().replace("-", "");
+        String startEndTemp = columnName + Math.abs(endValue.hashCode()) + UUID.randomUUID().toString().replace("-", "");
+
+        paramsMap.put(startValueTemp, startValue);
+        paramsMap.put(startEndTemp, endValue);
+        typedThis.lambdaSqlModelList.add(new LambdaSqlModel(columnName, ":"+startValueTemp, ":"+startEndTemp,SqlKeyword.BETWEEN));
+
+        return typedThis;
+    }
+
 }

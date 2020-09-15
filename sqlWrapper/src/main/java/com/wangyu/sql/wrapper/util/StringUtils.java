@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -754,4 +755,5 @@ public class StringUtils {
         String match = "\\s*" + p + "\\s*,{0,1}";
         return s.replaceAll(match, "");
     }
+
 }

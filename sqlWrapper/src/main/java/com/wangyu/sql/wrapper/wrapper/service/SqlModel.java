@@ -1,4 +1,4 @@
-package com.wangyu.sql.wrapper.wrapper;
+package com.wangyu.sql.wrapper.wrapper.service;
 
 import com.wangyu.sql.wrapper.constants.SqlWrapperConfig;
 import com.wangyu.sql.wrapper.model.GroupByModel;
@@ -8,6 +8,7 @@ import com.wangyu.sql.wrapper.model.OrderByModel;
  * @Author wangyu
  * @Create: 2019/9/26 2:44 下午
  * @Description:
+ * 组合关联字处理
  */
 public interface SqlModel<R> {
 
