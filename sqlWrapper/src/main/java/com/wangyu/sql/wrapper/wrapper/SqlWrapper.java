@@ -11,4 +11,10 @@ public class SqlWrapper<T> extends AbstractSqlWrapper<T,SqlWrapper<T>>{
     public SqlWrapper(Class<T> entityClass){
         super(entityClass);
     }
+
+    public void clear(){
+        lambdaSqlModelList.clear();
+        paramsMap.clear();
+        hql = null;
+    }
 }

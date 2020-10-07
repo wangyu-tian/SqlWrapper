@@ -1,9 +1,12 @@
 package com.wangyu.sql.wrapper.util;
 
+import org.springframework.util.ObjectUtils;
+
 import java.nio.charset.StandardCharsets;
 import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -718,7 +721,7 @@ public class StringUtils {
     }
 
     public static boolean ignoreNull(Object value){
-        return value == null ? true :
+        return ObjectUtils.isEmpty(value) ? true :
             value instanceof String ? value.toString().trim().equals(""):false;
     }
 
@@ -752,4 +755,5 @@ public class StringUtils {
         String match = "\\s*" + p + "\\s*,{0,1}";
         return s.replaceAll(match, "");
     }
+
 }
