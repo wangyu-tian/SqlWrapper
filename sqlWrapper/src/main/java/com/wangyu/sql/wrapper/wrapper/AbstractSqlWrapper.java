@@ -3,6 +3,7 @@ package com.wangyu.sql.wrapper.wrapper;
 import com.wangyu.sql.wrapper.constants.SqlWrapperConfig;
 import com.wangyu.sql.wrapper.enums.SqlKeyword;
 import com.wangyu.sql.wrapper.model.GroupByModel;
+import com.wangyu.sql.wrapper.model.OutSqlModel;
 import com.wangyu.sql.wrapper.model.inner.LambdaSqlModel;
 import com.wangyu.sql.wrapper.model.OrderByModel;
 import com.wangyu.sql.wrapper.support.SerializedLambda;
@@ -51,6 +52,8 @@ public abstract class AbstractSqlWrapper<T, Children extends AbstractSqlWrapper<
     private final String WHERE = "WHERE";
 
     private final String LINK_DEFAULT = "AND";
+
+    private OutSqlModel outSqlModel;
 
     protected List<LambdaSqlModel> lambdaSqlModelList = new ArrayList<>();
 
@@ -138,6 +141,12 @@ public abstract class AbstractSqlWrapper<T, Children extends AbstractSqlWrapper<
      * @return
      */
     private StringBuffer initHql() {
+        if(outSqlModel != null){
+            selectSql.append("select ")
+                    .append(outSqlModel.getColumnNames())
+                    .append(EMPTY)
+            ;
+        }
         selectSql.append("from").append(EMPTY)
                 .append(entityClass.getName())
                 .append(EMPTY).append("o").append(EMPTY);
@@ -318,7 +327,7 @@ public abstract class AbstractSqlWrapper<T, Children extends AbstractSqlWrapper<
     }
 
     /**
-     * order by 分组
+     * order by
      * you can use by flows
      * sqlWrapper.newOrderByModel(Entity::getId)
      *
@@ -330,6 +339,17 @@ public abstract class AbstractSqlWrapper<T, Children extends AbstractSqlWrapper<
         Arrays.asList(orderByModels).forEach(o -> {
             this.addConditionExt((SFunction<T, ?>) o.getColumn(), SqlKeyword.ORDER_BY, o.getOrder());
         });
+        return typedThis;
+    }
+
+    /**
+     * 输出实体对象
+     * @param outSqlModel
+     * @return
+     */
+    @Override
+    public Children outModel(OutSqlModel outSqlModel) {
+        this.outSqlModel = outSqlModel;
         return typedThis;
     }
 
@@ -461,6 +481,10 @@ public abstract class AbstractSqlWrapper<T, Children extends AbstractSqlWrapper<
         typedThis.lambdaSqlModelList.add(new LambdaSqlModel(columnName, ":"+startValueTemp, ":"+startEndTemp,SqlKeyword.BETWEEN));
 
         return typedThis;
+    }
+
+    public OutSqlModel getOutSqlModel(){
+        return outSqlModel;
     }
 
 }

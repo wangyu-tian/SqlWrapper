@@ -1,6 +1,10 @@
 package com.wangyu.sql.wrapper.util;
 
+import ch.qos.logback.core.joran.util.beans.BeanUtil;
+import com.wangyu.sql.wrapper.model.OutEntityModel;
 import com.wangyu.sql.wrapper.wrapper.SqlWrapper;
+import org.hibernate.transform.AliasToBeanResultTransformer;
+import org.hibernate.transform.Transformers;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -9,7 +13,7 @@ import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -17,6 +21,7 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  *  * @Author wangyu
@@ -43,19 +48,19 @@ public class JpaUtil {
         return query.getResultList();
     }
 
-  /**
-   * 查询单数据
-   *
-   * @param hql
-   * @param params
-   * @param <T>
-   * @return
-   */
-  public <T> T one(String hql, Map<String, Object> params) {
-    Query query = queryParams(hql, params);
-    query.setMaxResults(1);
-    return (T) query.getSingleResult();
-  }
+    /**
+     * 查询单数据
+     *
+     * @param hql
+     * @param params
+     * @param <T>
+     * @return
+     */
+    private <T> T one(String hql, Map<String, Object> params) {
+        Query query = queryParams(hql, params);
+        query.setMaxResults(1);
+        return (T) query.getSingleResult();
+    }
 
     /**
      * 获取query
@@ -124,7 +129,7 @@ public class JpaUtil {
      */
     public int count(String hql, Map<String, Object> params) {
         TypedQuery<Long> cQuery = (TypedQuery<Long>) em.createQuery(QueryUtils.createCountQueryFor(hql));
-        setQueryParams(cQuery,params);
+        setQueryParams(cQuery, params);
         long countL = executeCountQuery(cQuery);
         return Integer.parseInt(String.valueOf(countL));
     }
@@ -141,8 +146,12 @@ public class JpaUtil {
         return query.getSingleResult();
     }
 
+
+    //wrapper实现
+
     /**
      * 查询单数据
+     *
      * @param sqlWrapper
      * @param <T>
      * @return
@@ -151,18 +160,29 @@ public class JpaUtil {
         return one(sqlWrapper.getHql(), sqlWrapper.getParamsMap());
     }
 
+    public <R> R wrapperOne(SqlWrapper sqlWrapper, Class<R> modelClass) {
+        return (R) BeanUtils.objsToEntity((Object[]) one(sqlWrapper.getHql(), sqlWrapper.getParamsMap()),
+                sqlWrapper.getOutSqlModel().getColumnNameList(), modelClass);
+    }
+
     /**
      * 列表查询
+     *
      * @param sqlWrapper
      * @param <T>
      * @return
      */
-    public <T> List<T> wrapper(SqlWrapper<T> sqlWrapper) {
+    public <T> List wrapper(SqlWrapper<T> sqlWrapper) {
+        if (!ObjectUtils.isEmpty(sqlWrapper.getOutSqlModel())) {
+            return BeanUtils.objsToEntityBatch(list(sqlWrapper.getHql(), sqlWrapper.getParamsMap()),
+                    sqlWrapper.getOutSqlModel().getColumnNameList(), sqlWrapper.getOutSqlModel().getEntityClass());
+        }
         return list(sqlWrapper.getHql(), sqlWrapper.getParamsMap());
     }
 
     /**
      * 分页查询
+     *
      * @param sqlWrapper
      * @param pageable
      * @param <T>
@@ -174,13 +194,14 @@ public class JpaUtil {
 
     /**
      * 分页查询
+     *
      * @param sqlWrapper
      * @param currentPage 当前页。第一页是0
-     * @param pageSize 每页大小
+     * @param pageSize    每页大小
      * @param <T>
      * @return
      */
-    public <T> Page<T> pageWrapper(SqlWrapper<T> sqlWrapper, int currentPage,int pageSize) {
-        return page(sqlWrapper.getHql(), sqlWrapper.getParamsMap(), PageRequest.of(currentPage,pageSize));
+    public <T> Page<T> pageWrapper(SqlWrapper<T> sqlWrapper, int currentPage, int pageSize) {
+        return page(sqlWrapper.getHql(), sqlWrapper.getParamsMap(), PageRequest.of(currentPage, pageSize));
     }
 }

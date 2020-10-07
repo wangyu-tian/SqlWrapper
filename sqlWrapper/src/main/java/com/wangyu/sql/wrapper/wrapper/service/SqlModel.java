@@ -3,6 +3,7 @@ package com.wangyu.sql.wrapper.wrapper.service;
 import com.wangyu.sql.wrapper.constants.SqlWrapperConfig;
 import com.wangyu.sql.wrapper.model.GroupByModel;
 import com.wangyu.sql.wrapper.model.OrderByModel;
+import com.wangyu.sql.wrapper.model.OutSqlModel;
 
 /**
  * @Author wangyu
@@ -22,5 +23,9 @@ public interface SqlModel<R> {
 
     default GroupByModel<R> newGroupByModel(R column){
         return new GroupByModel<>(column);
+    }
+
+    default <T> OutSqlModel<T,R> newOutModel(Class<T> entityClass, R... args){
+        return new OutSqlModel<T,R>(entityClass, args);
     }
 }

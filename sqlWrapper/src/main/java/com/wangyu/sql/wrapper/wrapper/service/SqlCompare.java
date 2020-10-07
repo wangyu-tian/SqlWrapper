@@ -2,6 +2,7 @@ package com.wangyu.sql.wrapper.wrapper.service;
 
 import com.wangyu.sql.wrapper.model.GroupByModel;
 import com.wangyu.sql.wrapper.model.OrderByModel;
+import com.wangyu.sql.wrapper.model.OutSqlModel;
 
 import java.util.Collection;
 import java.util.List;
@@ -14,6 +15,8 @@ import java.util.function.Function;
  * Description:
  */
 public interface SqlCompare<Children, R> {
+
+    Children outModel(OutSqlModel outSqlModel);
 
     Children groupBy(GroupByModel... groupByModels);
 

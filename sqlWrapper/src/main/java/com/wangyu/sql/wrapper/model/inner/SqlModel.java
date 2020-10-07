@@ -8,6 +8,9 @@ package com.wangyu.sql.wrapper.model.inner;
 public class SqlModel<T> {
     protected T column;
 
+    public SqlModel(){
+    }
+
     public SqlModel(T t){
         column = t;
     }
